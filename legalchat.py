@@ -1,5 +1,4 @@
-#Note: The openai-python library support for Azure OpenAI is in preview.
-#Note: This code sample requires OpenAI Python library version 0.28.1 or lower.
+#Note: This code sample requires OpenAI Python library version 0.28.1 or lower. See requirements.txt for more information.
 import os
 import openai
 import dotenv
@@ -102,7 +101,7 @@ while keepGoing:
       else:
         print(error.user_message);
         logging.error(error.user_message)
-        quit = input("Please wait at list one minute and press enter to continue 'q' to quit...")
+        quit = input("Please wait at least one minute and press enter to continue 'q' to quit...")
         if(quit.lower().startswith('q')):
           keepGoing = False
         else:
