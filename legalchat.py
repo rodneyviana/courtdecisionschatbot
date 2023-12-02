@@ -41,7 +41,7 @@ else:
   logging.info("Using basic text extraction")
   fullText = pdf_to_text(pdfFilePath)
 
-openai.api_type = "azure"
+openai.api_type = os.getenv("OPENAI_API_TYPE")
 openai.api_base = os.getenv("AZURE_OPENAI_BASE_URL")
 openai.api_version = "2023-07-01-preview"
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -66,7 +66,7 @@ while keepGoing:
         })
       logging.info("Sending question to OpenAI")
       completion = openai.ChatCompletion.create(
-        engine="gpt4-turbo",
+        engine=os.getenv("OPENAI_ENGINE_ID"),
         messages = conversation,
         temperature=0.5,
         max_tokens=4000,

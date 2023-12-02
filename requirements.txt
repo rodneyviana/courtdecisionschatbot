@@ -1,3 +1,6 @@
 openai==0.28.1
 python-dotenv
 pyPDF2
+pdfplumber
+gradio
+pycord[markdown]
