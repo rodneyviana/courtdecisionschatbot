@@ -57,3 +57,8 @@ For gradio (web application):
 source ./venv/bin/activate
 python legalchat.py
 ```
+**Screenshots:**
+
+![Image 1](./Screenshot1.png)
+![Image 2](./Screenshot2.png)
+
