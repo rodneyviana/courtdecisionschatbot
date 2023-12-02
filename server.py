@@ -8,7 +8,10 @@ import logging
 import dotenv
 from document_analysis import JudgeDecision2116278PDF
 from discord.utils import escape_markdown
-from markdown_bot import set_get_response, markdown_bot
+
+def set_get_response(s):
+  pass
+#markdown_bot = None
 
 # Load the environment variables
 dotenv.load_dotenv()
@@ -35,6 +38,8 @@ def process_json(json_file: str):
 # Define the function to process the uploaded file and create an OpenAI chat
 def process_file(file):
   # Check the file type and extract the text
+  if(file is None):
+    return "Please upload a file."
   if file.name.endswith(".pdf"):
     # Use pdfplumber to read the pdf file
     pdf = pdfplumber.open(file)
@@ -61,25 +66,34 @@ def process_file(file):
   set_get_response(process_question)
   # Launch the interface
   
-  markdown_bot.render()
+  
   return "Your chat is ready. Please enter your question in the textbox below."
 
 def process_question(question: str):
   # Use OpenAI to create a chat based on the text
   # Set the engine and the temperature
+  if(question is None or len(question) == 0):
+    return "Please enter a question."
   engine = os.getenv("OPENAI_ENGINE_ID") or "davinci"
   temperature = float(os.getenv("OPENAI_TEMPERATURE") or 0.5)
   # Create a prompt with the text and a question
-  prompt = f"The following is a court decision:\n{document_text}\n\nQ: "
+  #prompt = f"The following is a court decision:\n{document_text}\n\nQ: "
   # Use gr.Interface to create a chat interface
-  
-  completion = openai.Completion.create(
-      engine = engine,
-      prompt = prompt + question + "\nA: ",
-      temperature = temperature,
-      max_tokens = os.getenv("OPENAI_MAX_TOKENS") or 4000,
-      stop = None
-    ) #["choices"][0]["text"],
+  conversation.append({
+      "role": "user",
+      "content": question
+    })
+
+  completion = openai.ChatCompletion.create(
+        engine=engine,
+        messages = conversation,
+        temperature=temperature,
+        max_tokens=4000,
+        top_p=0.95,
+        frequency_penalty=0,
+        presence_penalty=0,
+        stop=None
+      )
   reason = completion.choices[0].finish_reason
   content = completion.choices[0].message.content
   try:

@@ -2,18 +2,21 @@ from typing import Callable
 import gradio as gr
 import os
 import time
+from server import process_question, process_file
 
 # Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
 
-getResponse: Callable[[str], str] = None
-lastText: str = None
+getResponse: Callable[[str], str] = process_question
+
+lastText = ""
 
 def set_get_response(get_response: Callable[[str], str]):
     getResponse = get_response
 
 def add_text(history, text):
-    history = history + [(text, None)]
+    global lastText
     lastText = text
+    history = history + [(text, None)]
     return history, gr.Textbox(value="", interactive=False)
 
 
@@ -23,6 +26,7 @@ def add_file(history, file):
 
 
 def bot(history):
+    global lastText
     response = getResponse(lastText)
     history[-1][1] = ""
     for character in response:
@@ -32,6 +36,7 @@ def bot(history):
 
 
 with gr.Blocks() as markdown_bot:
+    gr.Interface(process_file, "file", "text")
     chatbot = gr.Chatbot(
         [],
         elem_id="chatbot",
@@ -58,3 +63,4 @@ with gr.Blocks() as markdown_bot:
 
 markdown_bot.queue()
 
+markdown_bot.launch()
