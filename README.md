@@ -55,8 +55,10 @@ python legalchat.py
 For gradio (web application):
 ```
 source ./venv/bin/activate
-python legalchat.py
+python markdown_bot.py
 ```
+**NOTE:** Do not use server.py. The name is deceiving. It is now there because of a few imports, I will drop it after I migrate all the dependent code.
+
 **Screenshots:**
 
 ![Image 1](./Screenshot1.png)
