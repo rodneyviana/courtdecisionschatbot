@@ -63,4 +63,4 @@ with gr.Blocks() as markdown_bot:
 
 markdown_bot.queue()
 
-markdown_bot.launch()
+markdown_bot.launch(share=True)
