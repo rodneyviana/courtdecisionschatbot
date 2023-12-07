@@ -4,5 +4,5 @@ pyPDF2
 pdfplumber
 gradio
 pycord
-dyscord
+discord
 
