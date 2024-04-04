@@ -17,7 +17,7 @@ def set_get_response(s):
 dotenv.load_dotenv()
 openai.api_type = os.getenv("OPENAI_API_TYPE")
 openai.api_base = os.getenv("AZURE_OPENAI_BASE_URL")
-openai.api_version = "2023-07-01-preview"
+openai.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 conversation = []
@@ -62,7 +62,7 @@ def process_file(file):
                    "role":"system",
                    "content": f"You are a lawyer scholar and will respond questions about this legal document, all responses should be formatted as markdown: {text}"
                 }
-               )
+               );
   set_get_response(process_question)
   # Launch the interface
   
@@ -84,30 +84,42 @@ def process_question(question: str):
       "content": question
     })
 
-  completion = openai.ChatCompletion.create(
-        engine=engine,
+  completion = openai.chat.completions.create(
+        model=engine,
         messages = conversation,
         temperature=temperature,
         max_tokens=4000,
         top_p=0.95,
         frequency_penalty=0,
         presence_penalty=0,
+        stream=True,
         stop=None
       )
-  reason = completion.choices[0].finish_reason
-  content = completion.choices[0].message.content
-  try:
-    if(reason == "stop"):
-      conversation.append({
-            "role": completion.choices[0].message.role,
-            "content": content
-            })
-      return completion.choices[0].message.content
-    else:
-      return f"Sorry, there was a problem. ** Reason: ** {reason}\n** Content: ** {content}"
-  except Exception as error:
-    return f"Sorry, there was a problem. ** Status: ** {reason}\n** Error: **\n```\n{escape_markdown(error)}\n```"
-      
+  content = ""
+  role = "assistant"
+  for chunk in completion:
+    if len(chunk.choices)  > 0:
+      try:
+        if(chunk.choices[0].delta.content is None):
+          continue;
+        if(chunk.choices[0].finish_reason == "length" or chunk.choices[0].finish_reason == "content_filter"):
+          content = content + f" (error reason: {chunk.choices[0].finish_reason})"
+          print(f"stop reason: {chunk.choices[0].finish_reason}")
+          yield f" (error reason: {chunk.choices[0].finish_reason})"
+          break
+        content = content + chunk.choices[0].delta.content
+        # role = chunk.choices[0].delta.role;
+        yield chunk.choices[0].delta.content
+      except Exception as e:
+        logging.error(e)
+        print(e)
+  
+  conversation.append({
+      "role": role,
+      "content": content
+    })
+  yield ""
+  
 # Create a gradio app to upload the file and process it
 app = gr.Interface(
   # Define the function to process the file
