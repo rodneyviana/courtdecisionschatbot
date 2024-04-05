@@ -1,0 +1,20 @@
+{
+    "open_ai_api_key": "07df1003e59c4f1e8e5a958db6838bc1",
+    "open_ai_engine_id": "gpt4-turbo",
+    "open_ai_api_type": "azure",
+    "open_ai_temperature": 0.5,
+    "azure_open_ai_endpoint": "https://rviana-opepai-eastus2.openai.azure.com/",
+    "azure_open_ai_base_url": "https://rviana-opepai-eastus2.openai.azure.com",
+    "azure_open_ai_api_version": "2024-02-15-preview",
+    "log_file": "log.txt",
+    "log_level": "WARNING",
+    "instruction_message": "You are a software expert and will analyze the course lab material below and answer questions related to the material or related questions : $1",
+    "welcome_message": "Hello! I'm a book critic. Ask me question about the book",
+    "azure_doc_ai_endpoint": "https://rviana-docai-eastus2.azure.com/",
+    "azure_doc_ai_api_version": "2021-10-01",
+    "azure_doc_ai_key": "b1efdsfdsfds",
+    "open_ai_max_tokens": 4000,
+    "open_ai_top_p": 0.95,
+    "open_ai_frequency_penalty": 0,
+    "open_ai_presence_penalty": 0
+}

@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 openai==1.16.1
+=======
+openai
+>>>>>>> refs/remotes/origin/main
 python-dotenv
+python-docx
 pyPDF2
 pdfplumber
 gradio

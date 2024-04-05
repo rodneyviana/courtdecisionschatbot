@@ -17,18 +17,11 @@ def set_get_response(s):
 #markdown_bot = None
 
 # Load the environment variables
-# dotenv.load_dotenv()
-# openai.api_type = os.getenv("OPENAI_API_TYPE")
-# openai.api_base = os.getenv("AZURE_OPENAI_BASE_URL")
-# openai.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
-# openai.api_key = os.getenv("OPENAI_API_KEY")
-
-config = get_config()
-openai.api_key = config.open_ai_api_key
-openai.api_type = config.open_ai_api_type
-openai.api_version = config.azure_open_ai_api_version
-openai.api_base = config.azure_open_ai_base_url
-
+dotenv.load_dotenv()
+openai.api_type = os.getenv("OPENAI_API_TYPE")
+openai.api_base = os.getenv("AZURE_OPENAI_BASE_URL")
+openai.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 conversation = []
 
@@ -116,13 +109,13 @@ def process_question(question: str):
     })
 
   completion = openai.chat.completions.create(
-        model=config.open_ai_engine_id,
+        model=engine,
         messages = conversation,
-        temperature=config.open_ai_temperature,
-        max_tokens=config.open_ai_max_tokens,
-        top_p=config.open_ai_top_p,
-        frequency_penalty=config.open_ai_frequency_penalty,
-        presence_penalty=config.open_ai_presence_penalty,
+        temperature=temperature,
+        max_tokens=4000,
+        top_p=0.95,
+        frequency_penalty=0,
+        presence_penalty=0,
         stream=True,
         stop=None
       )

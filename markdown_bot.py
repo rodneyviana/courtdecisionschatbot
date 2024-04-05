@@ -30,6 +30,13 @@ def bot(history):
     response = getResponse(lastText)
     history[-1][1] = ""
     for chunk in response:
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+        history[-1][1] += chunk
+        yield history
+=======
+>>>>>>> refs/remotes/origin/main
         try:
             history[-1][1] += chunk
             yield chunk
@@ -40,14 +47,19 @@ def bot(history):
     except:
         print("Error 2")
         yield ""
+<<<<<<< HEAD
+=======
+>>>>>>> 7ff8ca3b (added configuration setting and changed settings to be on JSON)
+>>>>>>> refs/remotes/origin/main
 
 
 with gr.Blocks() as markdown_bot:
-    gr.Interface(process_file, "file", "text")
+    gr.Interface(process_file, "file", "text", title="Upload a court decision pdf or json file")
     chatbot = gr.Chatbot(
         [],
         elem_id="chatbot",
         bubble_full_width=False,
+        label="Chat with the AI",
         avatar_images=(None, (os.path.join(os.path.dirname(__file__), "OIP.jpg"))),
     )
 
@@ -55,19 +67,20 @@ with gr.Blocks() as markdown_bot:
         txt = gr.Textbox(
             scale=4,
             show_label=False,
-            placeholder="Enter text and press enter, or upload an image",
+            placeholder="Enter text and press enter...",
             container=False,
         )
-        btn = gr.UploadButton("📁", file_types=["image", "video", "audio"])
+        #btn = gr.UploadButton("📁", file_types=["image", "video", "audio"])
 
     txt_msg = txt.submit(add_text, [chatbot, txt], [chatbot, txt], queue=False).then(
         bot, chatbot, chatbot, api_name="bot_response"
     )
     txt_msg.then(lambda: gr.Textbox(interactive=True), None, [txt], queue=False)
-    file_msg = btn.upload(add_file, [chatbot, btn], [chatbot], queue=False).then(
-        bot, chatbot, chatbot
-    )
+    #file_msg = btn.upload(add_file, [chatbot, btn], [chatbot], queue=False).then(
+    #    bot, chatbot, chatbot
+    #)
 
 markdown_bot.queue()
+lastText = ""
 
 markdown_bot.launch(share=True)
