@@ -19,7 +19,7 @@ These are some questions I used:
 There are two versions depending of your preference:
 
 - **legalchat.py:** console application already tuned to use the examples I provided
-- **markdown_bot.py** gradio application presenting a more interesting and interactive 
+- **azure-chat.py** gradio application presenting a more interesting and interactive 
 
 ### How to run ###
 
@@ -54,4 +54,5 @@ python azure-chat.py
 
 ![Image 1](./Screenshot1.png)
 ![Image 2](./Screenshot2.png)
+![Image 3](./settings.png)
 
