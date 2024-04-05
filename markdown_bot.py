@@ -29,10 +29,17 @@ def bot(history):
     global lastText
     response = getResponse(lastText)
     history[-1][1] = ""
-    for character in response:
-        history[-1][1] += character
-        time.sleep(0.01)
-        yield history
+    for chunk in response:
+        try:
+            history[-1][1] += chunk
+            yield chunk
+        except:
+            print("Error")
+    try:
+        history[-1][1] = ""
+    except:
+        print("Error 2")
+        yield ""
 
 
 with gr.Blocks() as markdown_bot:

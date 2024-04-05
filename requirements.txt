@@ -1,4 +1,4 @@
-openai==0.28.1
+openai==1.16.1
 python-dotenv
 pyPDF2
 pdfplumber
