@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 openai
+=======
+openai==1.16.1
+>>>>>>> 7ff8ca3b (added configuration setting and changed settings to be on JSON)
 python-dotenv
 pyPDF2
 pdfplumber

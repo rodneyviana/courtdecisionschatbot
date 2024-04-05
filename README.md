@@ -32,15 +32,16 @@ pip install -r requirements.txt
 
 2. Create a .env file to put your environment settings. Those are:
 
-```
+```sh
 OPENAI_API_KEY="<your key>"
 OPENAI_ENGINE_ID="<name of your deployment>"
 OPENAI_API_TYPE="azure"
 OPENAI_TEMPERATURE="0.5"
-AZURE_OPENAI_ENDPOINT="https://rviana-opepai-eastus2.openai.azure.com/"
-AZURE_OPENAI_BASE_URL="https://rviana-opepai-eastus2.openai.azure.com/"
+AZURE_OPENAI_ENDPOINT="https://openai-eastus2.openai.azure.com/"
+AZURE_OPENAI_BASE_URL="https://openai-eastus2.openai.azure.com/"
 LOG_FILE="log.txt"
 OPENAI_MAX_TOKENS="4000"
+AZURE_OPENAI_API_VERSION="2024-02-15-preview"
 ```
 Temperature less the 0.5 will make it less imaginative but more precise, more than 0.7 may lead to "allucinations". I left my endpoints so you will now what to add if you look at your deployments.
 
