@@ -30,19 +30,9 @@ source ./venv/bin/activate
 pip install -r requirements.txt
 ```
 
-2. Create a .env file to put your environment settings. Those are:
+2. Use the configuration tab to add the base urls, secrets and AI parameters
 
-```sh
-OPENAI_API_KEY="<your key>"
-OPENAI_ENGINE_ID="<name of your deployment>"
-OPENAI_API_TYPE="azure"
-OPENAI_TEMPERATURE="0.5"
-AZURE_OPENAI_ENDPOINT="https://openai-eastus2.openai.azure.com/"
-AZURE_OPENAI_BASE_URL="https://openai-eastus2.openai.azure.com/"
-LOG_FILE="log.txt"
-OPENAI_MAX_TOKENS="4000"
-AZURE_OPENAI_API_VERSION="2024-02-15-preview"
-```
+Instructions are the rules for your AI. Don't forget to add $1 to be replaced by the document. If you don't need to analyze documents, $1 can be removed. Example: "you are a law scholar and you will respond only questions about the document below or segue questions related to the document: $1"
 Temperature less the 0.5 will make it less imaginative but more precise, more than 0.7 may lead to "allucinations". I left my endpoints so you will now what to add if you look at your deployments.
 
 3. Run you favorite flavor of the application
@@ -56,7 +46,7 @@ python legalchat.py
 For gradio (web application):
 ```
 source ./venv/bin/activate
-python markdown_bot.py
+python azure-chat.py
 ```
 **NOTE:** Do not use server.py. The name is deceiving. It is now there because of a few imports, I will drop it after I migrate all the dependent code.
 
