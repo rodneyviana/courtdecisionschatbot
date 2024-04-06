@@ -1,5 +1,5 @@
 {
-    "open_ai_api_key": "07df1003e59c4f1e8e5a958db6838bc1",
+    "open_ai_api_key": "a07df1003e59c4f1e8e5a958db6838bc1",
     "open_ai_engine_id": "gpt4-turbo",
     "open_ai_api_type": "azure",
     "open_ai_temperature": 0.5,
