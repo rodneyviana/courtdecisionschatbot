@@ -3,14 +3,15 @@ import gradio as gr
 import pdfplumber
 import json
 import openai
-import os
-import logging
 import dotenv
 import docx
 from document_analysis import JudgeDecision2116278PDF
 from discord.utils import escape_markdown
-from config import get_config
+from config import get_config, get_logger
 
+dotenv.load_dotenv()
+
+logger = get_logger(get_config())
 
 def set_get_response(s):
   pass
@@ -35,6 +36,7 @@ conversation = []
 document_text = ""
 
 def process_json(json_file: str):
+    logger.info(f"Processing json file: {json_file}")
     docana: JudgeDecision2116278PDF = None
     with open(json_file, "r", encoding='utf-8') as raw_json:
       temp = json.load(raw_json) #, object_hook=JudgeDecision2116278PDF);
@@ -48,6 +50,7 @@ def process_json(json_file: str):
 # code to process the uploaded MS Word file to string
 def process_word(file):
   # Check the file type and extract the text
+  logger.info(f"Processing word file: {file}")
   if(file is None):
     return "Please upload a file."
   if file.name.endswith(".docx"):
@@ -66,6 +69,7 @@ def process_word(file):
 # Define the function to process the uploaded file and create an OpenAI chat
 def process_file(file):
   # Check the file type and extract the text
+  logger.info(f"Processing file: {file}")
   if(file is None):
     return "Please upload a file."
   text = ""
@@ -88,6 +92,8 @@ def process_file(file):
   if(text is None or len(text) == 0):
     return "No file was updated or the file is empty. Please upload a file with content."
   instruction_message = config.instruction_message.replace("$1", text)
+  logger.info(f"Restarting coversation with instruction message: {instruction_message[:100]}")
+  conversation.clear()
   conversation.append(
                 {
                    "role":"system",
@@ -142,7 +148,7 @@ def process_question(question: str):
         # role = chunk.choices[0].delta.role;
         yield chunk.choices[0].delta.content
       except Exception as e:
-        logging.error(e)
+        logger.error(e)
         print(e)
   
   conversation.append({

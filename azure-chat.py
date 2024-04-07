@@ -39,7 +39,7 @@ config_interface = edit_config(get_config())
 
 with gr.Blocks(title="AI") as markdown_bot:
     with gr.Tab(label="Chatbot"):
-        gr.Interface(process_file, "file", "text", title="Upload a court decision pdf or json file")
+        gr.Interface(process_file, "file", outputs=gr.Label(label="Result of import"), title="Upload a pdf, docx or JSON file", allow_flagging="never")
         chatbot = gr.Chatbot(
             [],
             elem_id="chatbot",
