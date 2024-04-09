@@ -7,6 +7,14 @@ import logging
 import json
 import gc
 
+import openai
+
+conversation = []
+
+def clear_conversation():
+    global conversation
+    conversation = []
+
 class Config:
     def __init__(self, open_ai_api_key=None, open_ai_engine_id=None, open_ai_api_type=None, open_ai_temperature=0.5, azure_open_ai_endpoint=None, azure_open_ai_base_url=None, azure_open_ai_api_version="2024-02-15-preview", log_file="log.log", log_level="ERROR", instruction_message="You are a AI assistant, please answer questions about this file: $1", welcome_message="Hello! I'm a chatbot. I can help you with your questions. How can I help you today?", azure_doc_ai_endpoint=None, azure_doc_ai_api_version=None, azure_doc_ai_key=None, open_ai_max_tokens=800, open_ai_top_p=0.95, open_ai_frequency_penalty=0, open_ai_presence_penalty=0):
         self.open_ai_api_key = open_ai_api_key
@@ -98,13 +106,20 @@ def edit_config(config):
         
         confObj = Config.from_dict(config)
         set_config(confObj)
-        gr.Warning(f"The app will restart to apply the new config.\nIf it fails you need to restart it manually.")
-        restart_process()
-        sys.exit(0)
-        #return "Config updated"
-
+        # config = get_config()
+        openai.api_key = config.open_ai_api_key
+        openai.api_type = config.open_ai_api_type
+        if(config.open_ai_api_type == "azure"):
+            openai.api_version = config.azure_open_ai_api_version
+            openai.azure_endpoint = config.azure_open_ai_endpoint
+            openai.base_url = None
+        else:
+            openai.api_base = config.azure_open_ai_base_url
+            openai.azure_endpoint = None
+        clear_conversation()
+        gr.Info("Config updated")
     # Create the interface
-    iface = gr.Interface(fn=update_config, inputs=list(fields.values()), outputs=None, allow_flagging="never", title="Config Editor", description="Edit the config file", submit_btn="Update Config (restarts the app)")
+    iface = gr.Interface(fn=update_config, inputs=list(fields.values()), outputs=None, allow_flagging="never", title="Config Editor", description="Edit the config file", submit_btn="Update Config")
 
     return iface
 

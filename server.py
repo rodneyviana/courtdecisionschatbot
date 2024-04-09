@@ -7,7 +7,7 @@ import dotenv
 import docx
 from document_analysis import JudgeDecision2116278PDF
 from discord.utils import escape_markdown
-from config import get_config, get_logger
+from config import get_config, get_logger, conversation, clear_conversation
 
 dotenv.load_dotenv()
 
@@ -28,7 +28,14 @@ config = get_config()
 openai.api_key = config.open_ai_api_key
 openai.api_type = config.open_ai_api_type
 openai.api_version = config.azure_open_ai_api_version
-openai.api_base = config.azure_open_ai_base_url
+if(config.open_ai_api_type == "azure"):
+  openai.azure_endpoint = config.azure_open_ai_base_url
+  openai.api_base = config.azure_open_ai_base_url
+  openai.base_url = None
+else:
+  openai.azure_endpoint = None
+  openai.api_base = config.azure_open_ai_base_url
+
 
 
 conversation = []
@@ -68,6 +75,7 @@ def process_word(file):
 
 # Define the function to process the uploaded file and create an OpenAI chat
 def process_file(file):
+  global conversation
   # Check the file type and extract the text
   logger.info(f"Processing file: {file}")
   if(file is None):
@@ -107,6 +115,7 @@ def process_file(file):
   return "Your chat is ready. Please enter your question in the textbox below."
 
 def process_question(question: str):
+  global conversation
   # Use OpenAI to create a chat based on the text
   # Set the engine and the temperature
   if(question is None or len(question) == 0):
