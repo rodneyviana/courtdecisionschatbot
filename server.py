@@ -74,45 +74,45 @@ def process_word(file):
 
 
 # Define the function to process the uploaded file and create an OpenAI chat
-def process_file(file):
-  global conversation
-  # Check the file type and extract the text
-  logger.info(f"Processing file: {file}")
-  if(file is None):
-    return "Please upload a file."
-  text = ""
-  if file.name.endswith(".pdf"):
-    # Use pdfplumber to read the pdf file
-    pdf = pdfplumber.open(file)
-    # Loop through the pages and append the text
-    for page in pdf.pages:
-      text += page.extract_text()
-    pdf.close()
-  elif file.name.endswith(".json"):
-    # Use json to load the json file
-    text = process_json(file)
-  elif file.name.endswith(".docx"):
-    # Use docx to read the docx file
-    text = process_word(file)
-  else:
-    # Return an error message if the file type is not supported
-    return "Sorry, I can only process docx, pdf or json files."
-  if(text is None or len(text) == 0):
-    return "No file was updated or the file is empty. Please upload a file with content."
-  instruction_message = config.instruction_message.replace("$1", text)
-  logger.info(f"Restarting coversation with instruction message: {instruction_message[:100]}")
-  conversation.clear()
-  conversation.append(
-                {
-                   "role":"system",
-                   "content": instruction_message
-                }
-               );
-  set_get_response(process_question)
-  # Launch the interface
+def process_file(files):
+    global conversation
+    texts = []
+    for file in files:
+        logger.info(f"Processing file: {file.name}")
+        if file is None:
+            continue  # Skip if the file is None
+        text = ""
+        if file.name.endswith(".pdf"):
+            # Use pdfplumber to read the pdf file
+            with pdfplumber.open(file) as pdf:
+                text = ''.join(page.extract_text() for page in pdf.pages if page.extract_text())
+        elif file.name.endswith(".json"):
+            # Use json to load the json file
+            text = process_json(file)
+        elif file.name.endswith(".docx"):
+            # Use docx to read the docx file
+            text = process_word(file)
+        else:
+            # Log an error message if the file type is not supported
+            logger.error("Unsupported file type. Can only process docx, pdf, or json files.")
+            continue
+        if text:
+            texts.append(text)
+    
+    if not texts:
+        return "No valid files were uploaded or the files are empty. Please upload docx, pdf, or json files with content."
+    
+    instruction_message = config.instruction_message
+    for i, text in enumerate(texts, start=1):
+        placeholder = f"${i}"
+        instruction_message = instruction_message.replace(placeholder, text)
+    
+    logger.info(f"Restarting conversation with instruction message: {instruction_message[:100]}")
+    conversation.clear()
+    conversation.append({"role": "system", "content": instruction_message})
+    set_get_response(process_question)
   
-  
-  return "Your chat is ready. Please enter your question in the textbox below."
+    return "Your chat is ready. Please enter your question in the textbox below."
 
 def process_question(question: str):
   global conversation
