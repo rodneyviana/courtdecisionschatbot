@@ -6,6 +6,9 @@ flagged/
 # C extensions
 *.so
 
+# Ignore tmp folders
+tmp*/
+
 # Distribution / packaging
 .Python
 build/

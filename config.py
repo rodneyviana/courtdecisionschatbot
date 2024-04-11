@@ -99,13 +99,14 @@ def edit_config(config):
     # Define the function to update the config
     def update_config(*args):
         i=0
-        config = {}
+        configDict = {}
         for key in fields.keys():
-            config[key] = args[i]
+            configDict[key] = args[i]
             i += 1
         
-        confObj = Config.from_dict(config)
-        set_config(confObj)
+        config = Config.from_dict(configDict)
+        set_config(config)
+        gr.Info("Config updated")
         # config = get_config()
         openai.api_key = config.open_ai_api_key
         openai.api_type = config.open_ai_api_type
@@ -117,7 +118,7 @@ def edit_config(config):
             openai.api_base = config.azure_open_ai_base_url
             openai.azure_endpoint = None
         clear_conversation()
-        gr.Info("Config updated")
+        
     # Create the interface
     iface = gr.Interface(fn=update_config, inputs=list(fields.values()), outputs=None, allow_flagging="never", title="Config Editor", description="Edit the config file", submit_btn="Update Config")
 
