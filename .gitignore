@@ -136,3 +136,6 @@ dmypy.json
 .pyre/
 userconfig.json
 log.txt
+deleteme.py
+conversation*.txt
+latex_delimiters.json

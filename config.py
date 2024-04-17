@@ -70,7 +70,9 @@ def set_config(config, config_path=None):
 def restart_process():
   logger.warning("Restarting the process")
   gc.collect()
-  os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
+  os.execl(sys.executable, sys.executable, *sys.argv)
+  # it should never get here
+  sys.exit(0)
 
 def edit_config(config):
     # Define the fields
@@ -106,22 +108,19 @@ def edit_config(config):
         
         config = Config.from_dict(configDict)
         set_config(config)
-        gr.Info("Config updated")
-        # config = get_config()
-        openai.api_key = config.open_ai_api_key
-        openai.api_type = config.open_ai_api_type
-        if(config.open_ai_api_type == "azure"):
-            openai.api_version = config.azure_open_ai_api_version
-            openai.azure_endpoint = config.azure_open_ai_endpoint
-            openai.base_url = None
-        else:
-            openai.api_base = config.azure_open_ai_base_url
-            openai.azure_endpoint = None
-        clear_conversation()
-        
-    # Create the interface
-    iface = gr.Interface(fn=update_config, inputs=list(fields.values()), outputs=None, allow_flagging="never", title="Config Editor", description="Edit the config file", submit_btn="Update Config")
+        gr.Warning("Config updated. Restarting the process. Reload the page to see the changes.")
+        restart_process()
 
+        
+    
+    # Create the interface
+    #btn = gr.Button("Update Config (it will restart the process)", variant="primary", js="setTimeout(() =>  window.location.reload(),1000)")
+    #btn.click(None, js="setTimeout(() =>  window.location.reload(),1000)")
+    iface = gr.Interface(fn=update_config, inputs=list(fields.values()), outputs=None, allow_flagging="never",
+                          title="Config Editor", description="Edit the config file", 
+                          submit_btn="Update Config (it will restart the process)")
+
+    
     return iface
 
 # create logging function

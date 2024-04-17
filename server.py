@@ -11,6 +11,8 @@ from config import get_config, get_logger, conversation, clear_conversation
 
 dotenv.load_dotenv()
 
+latex_instructions = "you may respond using LaTeX but you have to substitute multiline with single line surrounded by $$, for example:\ninstead of returning LaTeX multiline like this:\n\\[ \n\\begin{pmatrix}\n1 & 2 & 3 \\\\\na & b & c \\\\\nx & y & z\n\\end{pmatrix}\n\\]\n\nreturn a single LaTeX line like this (remove any new lines):\n$$ \\begin{bmatrix} 1 & 2 & 3 \\\\ a & b & c \\\\ x & y & z \\end{bmatrix}  $$\n\nFor single line LaTeX do not change anything just use $ to start abd $ to end"
+
 logger = get_logger(get_config())
 
 def set_get_response(s):
@@ -77,6 +79,8 @@ def process_word(file):
 def process_file(files):
     global conversation
     texts = []
+    if files is None:
+        files = []
     for file in files:
         logger.info(f"Processing file: {file.name}")
         if file is None:
@@ -98,10 +102,7 @@ def process_file(files):
             continue
         if text:
             texts.append(text)
-    
-    if not texts:
-        return "No valid files were uploaded or the files are empty. Please upload docx, pdf, or json files with content."
-    
+        
     instruction_message = config.instruction_message
     for i, text in enumerate(texts, start=1):
         placeholder = f"${i}"
@@ -109,6 +110,7 @@ def process_file(files):
     
     logger.info(f"Restarting conversation with instruction message: {instruction_message[:100]}")
     conversation.clear()
+    #conversation.append({"role": "system", "content": latex_instructions})
     conversation.append({"role": "system", "content": instruction_message})
     set_get_response(process_question)
   
@@ -159,7 +161,8 @@ def process_question(question: str):
       except Exception as e:
         logger.error(e)
         print(e)
-  
+  if(content is None or len(content) == 0):
+    content = "Sorry, I could not generate a response. Please try again."
   conversation.append({
       "role": role,
       "content": content

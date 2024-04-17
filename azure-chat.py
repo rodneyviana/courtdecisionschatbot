@@ -18,6 +18,9 @@ def set_get_response(get_response: Callable[[str], str]):
     getResponse = get_response
 
 def add_text(history, text):
+    if not (conversation and len(conversation) > 0):
+        gr.Error("Please upload a file first, or submit no file.")
+        return history, gr.Textbox(value="", interactive=False)
     global lastText
     lastText = text
     history = history + [(text, None)]
@@ -30,6 +33,8 @@ def add_file(history, file):
 
 
 def bot(history):
+    if not (conversation and len(conversation) > 0):
+        return history
     global lastText
     response = getResponse(lastText)
     history[-1][1] = ""
@@ -38,7 +43,7 @@ def bot(history):
         yield history
 
 last_size = 0
-def get_last_response(d):
+def get_last_response():
     global last_size
     global directory
     if(not directory):
@@ -46,19 +51,24 @@ def get_last_response(d):
         print(f"temp dir: {directory}")
         logger.info(f"temp dir: {directory}")
     if(last_size != len(conversation) and conversation and conversation[-1]):
-        last_size = len(conversation)
         file_name = f"conversation{time.time()}.txt"
         full_name = pathlib.Path(directory) / file_name
-        print(f"calculated full name: {full_name._str}")
-        with open(full_name._str, "w") as f:
+        print(f"calculated full name: {str(full_name)}")
+        with open(str(full_name), "w") as f:
             f.write(conversation[-1]["content"])
-        logger.info(f"Saved conversation to {full_name._str}")
+        logger.info(f"Saved conversation to {str(full_name)}")
+        last_size = len(conversation)
         return full_name._str
 
 
 # Create an instance of the edit_config function
 config_interface = edit_config(get_config())
 
+latex_delimiters=[ 
+              {"left": "\[", "right": "\]", "display": True},
+              {"left": "$$", "right": "$$", "display": False },
+              {"left": '$', "right": '$', "display": False},
+              ]
 # calling it demo to enable reload when calling with gradio <app> instead of python <app>
 with gr.Blocks(title="AI") as demo:
     with gr.Tab(label="Chatbot"):
@@ -69,12 +79,7 @@ with gr.Blocks(title="AI") as demo:
             bubble_full_width=False,
             label="Chat with the AI",
             avatar_images=(None, (os.path.join(os.path.dirname(__file__), "OIP.jpg"))),
-            latex_delimiters=[
-              {"left": '$$', "right": '$$', "display": True},
-              {"left": '$', "right": '$', "display": False},
-              {"left": "\(", "right": "\)", "display": False},
-              {"left": "\[", "right": "\]", "display": True}
-          ],
+            latex_delimiters=latex_delimiters,
         )
         
         with gr.Row(variant="panel"):
