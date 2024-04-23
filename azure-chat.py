@@ -2,7 +2,7 @@ from typing import Callable
 import gradio as gr
 import os
 import time
-from server import process_question, process_file, conversation
+from server import process_question, process_file, conversation, start_vanilla_conversation
 from config import edit_config, get_config, logger
 import pathlib
 import tempfile
@@ -18,9 +18,6 @@ def set_get_response(get_response: Callable[[str], str]):
     getResponse = get_response
 
 def add_text(history, text):
-    if not (conversation and len(conversation) > 0):
-        gr.Error("Please upload a file first, or submit no file.")
-        return history, gr.Textbox(value="", interactive=False)
     global lastText
     lastText = text
     history = history + [(text, None)]
@@ -33,9 +30,11 @@ def add_file(history, file):
 
 
 def bot(history):
-    if not (conversation and len(conversation) > 0):
-        return history
     global lastText
+    if not (conversation and len(conversation) > 0):
+        start_vanilla_conversation()
+        conversation.append({"role": "user", "content": lastText})
+    
     response = getResponse(lastText)
     history[-1][1] = ""
     for chunk in response:
@@ -66,20 +65,20 @@ config_interface = edit_config(get_config())
 
 latex_delimiters=[ 
               {"left": "\[", "right": "\]", "display": True},
+              {"left": "\\(", "right": "\\)", "display": False},
               {"left": "$$", "right": "$$", "display": False },
               {"left": '$', "right": '$', "display": False},
               ]
 # calling it demo to enable reload when calling with gradio <app> instead of python <app>
 with gr.Blocks(title="AI") as demo:
     with gr.Tab(label="Chatbot"):
-        gr.Interface(process_file, "files", outputs=gr.Label(label="Result of import"), title="Upload a pdf, docx or JSON file", allow_flagging="never")
+        gr.Interface(process_file, "files", outputs=gr.Label(label="Result of import"), title="Upload a pdf, docx or txt file", allow_flagging="never")
         chatbot = gr.Chatbot(
             [],
             elem_id="chatbot",
             bubble_full_width=False,
             label="Chat with the AI",
-            avatar_images=(None, (os.path.join(os.path.dirname(__file__), "OIP.jpg"))),
-            latex_delimiters=latex_delimiters,
+            avatar_images=(None, (os.path.join(os.path.dirname(__file__), "logoblue.png"))),            latex_delimiters=latex_delimiters,
         )
         
         with gr.Row(variant="panel"):

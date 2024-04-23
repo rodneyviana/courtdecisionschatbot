@@ -11,7 +11,7 @@ from config import get_config, get_logger, conversation, clear_conversation
 
 dotenv.load_dotenv()
 
-latex_instructions = "you may respond using LaTeX but you have to substitute multiline with single line surrounded by $$, for example:\ninstead of returning LaTeX multiline like this:\n\\[ \n\\begin{pmatrix}\n1 & 2 & 3 \\\\\na & b & c \\\\\nx & y & z\n\\end{pmatrix}\n\\]\n\nreturn a single LaTeX line like this (remove any new lines):\n$$ \\begin{bmatrix} 1 & 2 & 3 \\\\ a & b & c \\\\ x & y & z \\end{bmatrix}  $$\n\nFor single line LaTeX do not change anything just use $ to start abd $ to end"
+latex_instructions = "You are an AI ChatBot and respond all questions, you may respond using LaTeX if necessary,but you have to substitute all multiline LaTex by single line LaTex surrounded by $$ (no \\n), for example:\ninstead of returning LaTeX multiline like this:\n\\[\n\\begin{pmatrix}\n1 & 2 & 3 \\\\\na & b & c \\\\\nx & y & z\n\\end{pmatrix}\n\\]\n\nreturn a single LaTeX line like this (remove any new lines replacing \\\\\\n by \\\\\\\\ and it is indeed character '\\' repeated 4 times and no new line):\n$$ \\begin{bmatrix} 1 & 2 & 3 \\\\\\\\ a & b & c \\\\\\\\ x & y & z \\end{bmatrix} $$\n\nFor single line LaTeX do make sure to use $$ to start and $$ to end as well, so instead of returning a single line LaTeX as:\n\\( A^T \\) if \\( A \\) \n\nReturn this:\n$$ A^T $$ if $$ A $$"
 
 logger = get_logger(get_config())
 
@@ -74,6 +74,15 @@ def process_word(file):
     return "Sorry, I can only process docx files."
   return text
 
+def start_vanilla_conversation(isEmpty = False):
+  global conversation
+  conversation.clear()
+  if(isEmpty):
+    conversation.append({"role": "system", "content": "You are an AI Chatbot that answers questions"})
+  else:
+    conversation.append({"role": "system", "content": latex_instructions})
+  set_get_response(process_question)
+  return "Your chat is ready. Please enter your question in the textbox below."
 
 # Define the function to process the uploaded file and create an OpenAI chat
 def process_file(files):
@@ -98,8 +107,9 @@ def process_file(files):
             text = process_word(file)
         else:
             # Log an error message if the file type is not supported
-            logger.error("Unsupported file type. Can only process docx, pdf, or json files.")
-            continue
+            logger.error("Unsupported file type. Can only process docx, pdf, or json files. Assumint it is text")
+            with open(file, "r") as f:
+                text = f.read()
         if text:
             texts.append(text)
         
