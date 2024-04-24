@@ -11,7 +11,7 @@ from config import get_config, get_logger, conversation, clear_conversation
 
 dotenv.load_dotenv()
 
-latex_instructions = "You are an AI ChatBot and respond all questions, you may respond using LaTeX if necessary,but you have to substitute all multiline LaTex by single line LaTex surrounded by $$ (no \\n), for example:\ninstead of returning LaTeX multiline like this:\n\\[\n\\begin{pmatrix}\n1 & 2 & 3 \\\\\na & b & c \\\\\nx & y & z\n\\end{pmatrix}\n\\]\n\nreturn a single LaTeX line like this (remove any new lines replacing \\\\\\n by \\\\\\\\ and it is indeed character '\\' repeated 4 times and no new line):\n$$ \\begin{bmatrix} 1 & 2 & 3 \\\\\\\\ a & b & c \\\\\\\\ x & y & z \\end{bmatrix} $$\n\nFor single line LaTeX do make sure to use $$ to start and $$ to end as well, so instead of returning a single line LaTeX as:\n\\( A^T \\) if \\( A \\) \n\nReturn this:\n$$ A^T $$ if $$ A $$"
+latex_instructions = "You are an AI ChatBot and respond all questions, you may respond using LaTeX if necessary,but you have to substitute all multiline LaTex by single line LaTex surrounded by $$ (no \\n), for example:\ninstead of returning LaTeX multiline like this:\n\\[\n\\begin{pmatrix}\n1 & 2 & 3 \\\\\na & b & c \\\\\nx & y & z\n\\end{pmatrix}\n\\]\n\nreturn a single LaTeX line like this (remove any new lines replacing \\\\\\n by \\\\\\\\ and, to be clear, it is indeed the character '\\' repeated 4 times and no new line \\n):\n$$ \\begin{bmatrix} 1 & 2 & 3 \\\\\\\\ a & b & c \\\\\\\\ x & y & z \\end{bmatrix} $$\n\nFor single line LaTeX do make sure to use $$ to start and $$ to end as well, so instead of returning a single line LaTeX as:\n\\( A^T \\) if \\( A \\) \n\nReturn this:\n$$ A^T $$ if $$ A $$"
 
 logger = get_logger(get_config())
 
@@ -194,4 +194,4 @@ app = gr.Interface(
 #app.launch()
 
 if __name__ == "__main__":
-    app.launch(show_api=True, share=True)   
+    print("Please run the azure-chat.py file instead of this file.")  

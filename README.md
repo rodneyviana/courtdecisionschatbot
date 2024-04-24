@@ -16,10 +16,9 @@ These are some questions I used:
 
 \*  Note: this was after they gave me the names as text
 
-There are two versions depending of your preference:
+This is the application:
 
-- ~~**legalchat.py:** console application already tuned to use the examples I provided~~
-- **azure-chat.py** gradio application presenting a more interesting and interactive 
+- **azure-chat.py** gradio application presenting a interactive web page
 
 ### How to run
 
@@ -41,7 +40,7 @@ pip install -r requirements.txt
 
 2. Use the configuration tab to add the base urls, secrets and AI parameters
 
-Instructions are the rules for your AI. Don't forget to add \$1 to be replaced by the document. If you don't need to analyze documents, $1 can be removed. Example: *"you are a law scholar and you will respond only questions about the document below or segue questions related to the document: \$1"*
+Instructions are the rules for your AI. Don't forget to add \$1, \$2, etc to be replaced by the document or documents.  If you don't need to analyze documents, $1 can be removed. Example: *"you are a law scholar and you will respond only questions about the document below or segue questions related to the document: \$1"*
 Temperature less the 0.5 will make it less imaginative but more precise, more than 0.7 may lead to "allucinations". I left my endpoints so you will now what to add if you look at your deployments.
 
 3. Run the application (Gradio - web application) from the app folder
@@ -51,6 +50,17 @@ a) Linux (on the app folder)
 ```bash
 source ./venv/bin/activate
 python azure-chat.py
+```
+
+Alternatively you may set ```azure-chat.py``` to be executable (you just need to do it once) this way:
+
+```bash
+chmod +x azure-chat.py
+```
+
+And moving forward, just run the app
+```bash
+./azure-chat.py
 ```
 
 b) Windows
