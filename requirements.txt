@@ -6,4 +6,5 @@ pdfplumber
 gradio
 pycord
 discord
-
+azure-core
+azure-ai-formrecognizer

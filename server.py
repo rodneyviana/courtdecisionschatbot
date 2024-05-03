@@ -5,9 +5,10 @@ import json
 import openai
 import dotenv
 import docx
+from document_ai import analyze_read
 from document_analysis import JudgeDecision2116278PDF
 from discord.utils import escape_markdown
-from config import get_config, get_logger, conversation, clear_conversation
+from config import get_config, get_logger, conversation, clear_conversation, none_if_empty
 
 dotenv.load_dotenv()
 
@@ -92,27 +93,42 @@ def process_file(files):
         files = []
     for file in files:
         logger.info(f"Processing file: {file.name}")
+        print(f"Processing file: {file.name}")
         if file is None:
             continue  # Skip if the file is None
         text = ""
-        if file.name.endswith(".pdf"):
-            # Use pdfplumber to read the pdf file
-            with pdfplumber.open(file) as pdf:
-                text = ''.join(page.extract_text() for page in pdf.pages if page.extract_text())
-        elif file.name.endswith(".json"):
-            # Use json to load the json file
-            text = process_json(file)
-        elif file.name.endswith(".docx"):
-            # Use docx to read the docx file
-            text = process_word(file)
+        if not (none_if_empty(config.azure_doc_ai_endpoint) and none_if_empty(config.azure_doc_ai_key)) or file.name.endswith(".txt"):
+          logger.info("No OpenAI API key or engine ID provided or document is txt. Using local conversion.")
+          print("No OpenAI API key or engine ID provided. Using local conversion.")
+          if file.name.endswith(".pdf"):
+              # Use pdfplumber to read the pdf file
+              with pdfplumber.open(file) as pdf:
+                  text = ''.join(page.extract_text() for page in pdf.pages if page.extract_text())
+          elif file.name.endswith(".json"):
+              # Use json to load the json file
+              text = process_json(file)
+          elif file.name.endswith(".docx"):
+              # Use docx to read the docx file
+              text = process_word(file)
+          else:
+              # Log an error message if the file type is not supported
+              logger.error("Unsupported file type. Can only process docx, pdf, or json files. Assumint it is text")
+              with open(file, "r") as f:
+                  text = f.read()
         else:
-            # Log an error message if the file type is not supported
-            logger.error("Unsupported file type. Can only process docx, pdf, or json files. Assumint it is text")
-            with open(file, "r") as f:
-                text = f.read()
+          logger.info("Using Azure Doc AI to convert the file.")
+          print("Using Azure Doc AI to convert the file.")
+          try:
+            text = analyze_read(file)
+          except Exception as e:
+            logger.error(e)
+            gr.Error(f"Error processing file: {e}")
+            print(f"Error processing file: {e}")
         if text:
             texts.append(text)
-        
+        else:
+            logger.error(f"Could not process file: {file.name}")
+            gr.Warning(f"Could not process file: {file.name}. Skipping.")
     instruction_message = config.instruction_message
     for i, text in enumerate(texts, start=1):
         placeholder = f"${i}"
