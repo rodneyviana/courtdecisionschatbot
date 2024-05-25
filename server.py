@@ -178,11 +178,14 @@ def process_question(question: str):
   for chunk in completion:
     if len(chunk.choices)  > 0:
       try:
-        if(chunk.choices[0].delta.content is None):
+        if(chunk.choices[0].delta is None or chunk.choices[0].delta.content is None):
+          print("No content")
+          logger.error("No content")
           continue;
         if(chunk.choices[0].finish_reason == "length" or chunk.choices[0].finish_reason == "content_filter"):
           content = content + f" (error reason: {chunk.choices[0].finish_reason})"
           print(f"stop reason: {chunk.choices[0].finish_reason}")
+          logger.error(f"stop reason: {chunk.choices[0].finish_reason}")
           yield f" (error reason: {chunk.choices[0].finish_reason})"
           break
         content = content + chunk.choices[0].delta.content
@@ -193,6 +196,7 @@ def process_question(question: str):
         print(e)
   if(content is None or len(content) == 0):
     content = "Sorry, I could not generate a response. Please try again."
+    logger.error("No content generated")
   conversation.append({
       "role": role,
       "content": content

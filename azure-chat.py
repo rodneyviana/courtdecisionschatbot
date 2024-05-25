@@ -37,7 +37,7 @@ def bot(history):
     global lastText
     if not (conversation and len(conversation) > 0):
         start_vanilla_conversation()
-        conversation.append({"role": "user", "content": lastText})
+        # conversation.append({"role": "user", "content": lastText})
     
     response = getResponse(lastText)
     history[-1][1] = ""
@@ -46,22 +46,29 @@ def bot(history):
         yield history
 
 last_size = 0
-def get_last_response():
+def get_last_response(check_save_all: gr.Checkbox):
     global last_size
     global directory
     if(not directory):
         directory = tempfile.mkdtemp()
         print(f"temp dir: {directory}")
         logger.info(f"temp dir: {directory}")
-    if(last_size != len(conversation) and conversation and conversation[-1]):
+    if(conversation and conversation[-1]):
         file_name = f"conversation{time.time()}.txt"
         full_name = pathlib.Path(directory) / file_name
         print(f"calculated full name: {str(full_name)}")
-        with open(str(full_name), "w") as f:
-            f.write(conversation[-1]["content"])
-        logger.info(f"Saved conversation to {str(full_name)}")
-        last_size = len(conversation)
-        return full_name._str
+        if(check_save_all):
+            for i, item in enumerate(conversation):
+                with open(str(full_name), "a") as f:
+                    f.write(f"\n### {item['role']}:\n\n{item['content']}\n")
+            last_size = len(conversation)
+            return full_name._str
+        else:
+            with open(str(full_name), "w") as f:
+                f.write(conversation[-1]["content"])
+            logger.info(f"Saved conversation to {str(full_name)}")
+            last_size = len(conversation)
+            return full_name._str
 
 def show_urls():
     global local_url, share_url
@@ -127,12 +134,13 @@ with gr.Blocks(title="AI", theme=theme, css=css) as demo:
             )
 
         with gr.Row(variant="panel"):
+            gr_check_save_all = gr.Checkbox(label="Save all responses", value=False, scale=0)
             gr_outputs = [gr.File(label="Output File",
                                     file_count="single",
                                     file_types=[".md"])]
             gr_submit_button = gr.Button("Save last response to file", scale=0)
 
-        gr_submit_button.click(get_last_response, None, gr_outputs)
+        gr_submit_button.click(get_last_response, gr_check_save_all, gr_outputs)
 
         txt_msg = txt.submit(add_text, [chatbot, txt], [chatbot, txt], queue=False).then(
             bot, chatbot, chatbot, api_name="bot_response"
