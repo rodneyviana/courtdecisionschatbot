@@ -89,6 +89,7 @@ def start_vanilla_conversation(isEmpty = False):
 def process_file(files):
     global conversation
     texts = []
+    totalSize = 0
     if files is None:
         files = []
     for file in files:
@@ -125,6 +126,9 @@ def process_file(files):
             gr.Error(f"Error processing file: {e}")
             print(f"Error processing file: {e}")
         if text:
+            print(f"Size: {len(text)}")
+            totalSize += len(text)
+            print(f"Total size: {totalSize}")
             texts.append(text)
         else:
             logger.error(f"Could not process file: {file.name}")
