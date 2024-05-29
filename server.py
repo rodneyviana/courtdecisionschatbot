@@ -12,7 +12,7 @@ from config import get_config, get_logger, conversation, clear_conversation, non
 
 dotenv.load_dotenv()
 
-latex_instructions = "You are an AI ChatBot and respond all questions, you may respond using LaTeX if necessary,but you have to substitute all multiline LaTex by single line LaTex surrounded by $$ (no \\n), for example:\ninstead of returning LaTeX multiline like this:\n\\[\n\\begin{pmatrix}\n1 & 2 & 3 \\\\\na & b & c \\\\\nx & y & z\n\\end{pmatrix}\n\\]\n\nreturn a single LaTeX line like this (remove any new lines replacing \\\\\\n by \\\\\\\\ and, to be clear, it is indeed the character '\\' repeated 4 times and no new line \\n):\n$$ \\begin{bmatrix} 1 & 2 & 3 \\\\\\\\ a & b & c \\\\\\\\ x & y & z \\end{bmatrix} $$\n\nFor single line LaTeX do make sure to use $$ to start and $$ to end as well, so instead of returning a single line LaTeX as:\n\\( A^T \\) if \\( A \\) \n\nReturn this:\n$$ A^T $$ if $$ A $$"
+latex_instructions = "You are an AI ChatBot and respond all questions, you may respond using LaTeX if necessary,but you have to substitute all multiline LaTex by single line LaTex surrounded by $$ (no \\n), for example:\r\ninstead of returning LaTeX multiline like this:\r\n\\[\r\n\\begin{pmatrix}\r\n1 & 2 & 3 \\\\\r\na & b & c \\\\\r\nx & y & z\r\n\\end{pmatrix}\r\n\\]\r\n\r\nreturn a single LaTeX line like this (remove any new lines replacing \\\\\\n by \\\\\\\\ and, to be clear, it is indeed the character \'\\\' repeated 4 times and no new line \\n):\r\n$$ \\begin{bmatrix} 1 & 2 & 3 \\\\\\\\ a & b & c \\\\\\\\ x & y & z \\end{bmatrix} $$\r\n\r\nFor single line LaTeX do make sure to use $$ to start and $$ as starting and ending as the examples below.\r\nInstead of:\r\n\\( A^T \\) if \\( A \\) \r\n\r\nReturn this:\r\n$$ A^T $$ if $$ A $$\r\n\r\nInstead of:\r\n$ \\beta_2 $ is the exponential decay rate for the second moment estimates (typically set to 0.999)\r\n\r\nReturn this:\r\n$$ \\beta_2 $$ is the exponential decay rate for the second moment estimates (typically set to 0.999)"
 
 logger = get_logger(get_config())
 
@@ -146,22 +146,19 @@ def process_file(files):
   
     return "Your chat is ready. Please enter your question in the textbox below."
 
-def process_question(question: str):
+def process_question(question: str, message_object = None):
   global conversation
-  # Use OpenAI to create a chat based on the text
-  # Set the engine and the temperature
-  if(question is None or len(question) == 0):
-    return "Please enter a question."
-  # engine = os.getenv("OPENAI_ENGINE_ID") or "davinci"
-  # temperature = float(os.getenv("OPENAI_TEMPERATURE") or 0.5)
-  # Create a prompt with the text and a question
-  #prompt = f"The following is a court decision:\n{document_text}\n\nQ: "
-  # Use gr.Interface to create a chat interface
-  conversation.append({
-      "role": "user",
-      "content": question
-    })
-
+  
+  if(message_object is None):
+    if(question is None or len(question) == 0):
+      return "Please enter a question."
+    else:
+      conversation.append({
+          "role": "user",
+          "content": question
+        })
+  else:
+    conversation.append(message_object)
   completion = openai.chat.completions.create(
         model=config.open_ai_engine_id,
         messages = conversation,
@@ -170,30 +167,35 @@ def process_question(question: str):
         top_p=config.open_ai_top_p,
         frequency_penalty=config.open_ai_frequency_penalty,
         presence_penalty=config.open_ai_presence_penalty,
-        stream=True,
+        stream=(message_object is None),
         stop=None
       )
   content = ""
   role = "assistant"
-  for chunk in completion:
-    if len(chunk.choices)  > 0:
-      try:
-        if(chunk.choices[0].delta is None or chunk.choices[0].delta.content is None):
-          print("No content")
-          logger.error("No content")
-          continue;
-        if(chunk.choices[0].finish_reason == "length" or chunk.choices[0].finish_reason == "content_filter"):
-          content = content + f" (error reason: {chunk.choices[0].finish_reason})"
-          print(f"stop reason: {chunk.choices[0].finish_reason}")
-          logger.error(f"stop reason: {chunk.choices[0].finish_reason}")
-          yield f" (error reason: {chunk.choices[0].finish_reason})"
-          break
-        content = content + chunk.choices[0].delta.content
-        # role = chunk.choices[0].delta.role;
-        yield chunk.choices[0].delta.content
-      except Exception as e:
-        logger.error(e)
-        print(e)
+  if message_object:
+     #yield ""
+     content = completion.choices[0].message.content
+     yield content
+  else:
+    for chunk in completion:
+      if len(chunk.choices)  > 0:
+        try:
+          if(chunk.choices[0].delta is None or chunk.choices[0].delta.content is None):
+            print("No content")
+            logger.error("No content")
+            continue;
+          if(chunk.choices[0].finish_reason == "length" or chunk.choices[0].finish_reason == "content_filter"):
+            content = content + f" (error reason: {chunk.choices[0].finish_reason})"
+            print(f"stop reason: {chunk.choices[0].finish_reason}")
+            logger.error(f"stop reason: {chunk.choices[0].finish_reason}")
+            yield f" (error reason: {chunk.choices[0].finish_reason})"
+            break
+          content = content + chunk.choices[0].delta.content
+          # role = chunk.choices[0].delta.role;
+          yield chunk.choices[0].delta.content
+        except Exception as e:
+          logger.error(e)
+          print(e)
   if(content is None or len(content) == 0):
     content = "Sorry, I could not generate a response. Please try again."
     logger.error("No content generated")

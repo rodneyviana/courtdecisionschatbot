@@ -152,7 +152,7 @@ def edit_config(config):
 # create logging function
 def get_logger(config):
     log_level = getattr(logging, config.log_level)
-    logging.basicConfig(filename=config.log_file, level=log_level)
+    logging.basicConfig(filename=config.log_file, level=log_level, format='%(asctime)s - %(levelname)s - %(message)s')
     return logging
 
 logger = get_logger(get_config())

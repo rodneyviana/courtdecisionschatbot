@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import base64
 from typing import Callable
 import gradio as gr
 import os
@@ -14,10 +15,10 @@ share_url = None
 directory = None
 print(f"temp dir: {directory}")
 
-getResponse: Callable[[str], str] = process_question
+getResponse: Callable[[str, any], str] = process_question
 
 lastText = ""
-
+lastMedia = None
 def set_get_response(get_response: Callable[[str], str]):
     getResponse = get_response
 
@@ -27,10 +28,56 @@ def add_text(history, text):
     history = history + [(text, None)]
     return history, gr.Textbox(value="", interactive=False)
 
+# Open the image file and encode it as a base64 string
+def encode_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
+
+def get_file_extension(file_name):
+    return file_name.split(".")[-1]
 
 def add_file(history, file):
     history = history + [((file.name,), None)]
     return history
+
+def add_multimedia(history, file):
+    if not (conversation and len(conversation) > 0):
+        start_vanilla_conversation()
+    global lastMedia
+    file_type = "image"
+    if file.name.endswith(".wav") or file.name.endswith(".wmv") or file.name.endswith(".mp3"):
+        file_type = "audio"
+    elif file.name.endswith(".mp4") or file.name.endswith(".mov") or file.name.endswith(".avi"):
+        file_type = "video"
+    base64_muiltimedia = encode_image(file.name)
+    file_ext = get_file_extension(file.name)
+    instr_media = f"Please see the attached {file_type} file. You will answer questions based on this {file_type} when asked. Let me know you understand by typing 'I understand'."
+    message= {
+        "role": "user",
+        "content": [
+            {
+                "type": f"{file_type}_url",
+                 f"{file_type}_url": {
+                    "url": f"data:{file_type}/{file_ext};base64,{base64_muiltimedia}"
+                }
+            },
+            {
+                "type": "text",
+                "text": instr_media
+            }
+          ]
+        }
+
+    history = history + [((file.name,), None)]
+    history = history + [[instr_media, ""]]    
+    response = getResponse(None, message)
+    
+    for chunk in response:
+        print(f"chunk: {chunk}")
+        history[-1][1] += chunk
+        yield history
+
+
 
 
 def bot(history):
@@ -60,7 +107,15 @@ def get_last_response(check_save_all: gr.Checkbox):
         if(check_save_all):
             for i, item in enumerate(conversation):
                 with open(str(full_name), "a") as f:
-                    f.write(f"\n### {item['role']}:\n\n{item['content']}\n")
+                    content = item["content"]
+                    if isinstance(content, list):
+                        for sub_item in content:
+                            if sub_item["type"] == "image_url":
+                                f.write(f"\n### {item['role']}:\n\n![image]({sub_item['image_url']['url']})\n")
+                            else:
+                                f.write(f"\n### {item['role']}:\n\n{sub_item['text']}\n")
+                    else:
+                        f.write(f"\n### {item['role']}:\n\n{item['content']}\n")
             last_size = len(conversation)
             return full_name._str
         else:
@@ -132,6 +187,7 @@ with gr.Blocks(title="AI", theme=theme, css=css) as demo:
                 placeholder="Enter text and press enter...",
                 container=False,
             )
+            btn = gr.UploadButton("📁", file_types=["image", "video", "audio"])
 
         with gr.Row(variant="panel"):
             gr_check_save_all = gr.Checkbox(label="Save all responses", value=False, scale=0)
@@ -146,7 +202,9 @@ with gr.Blocks(title="AI", theme=theme, css=css) as demo:
             bot, chatbot, chatbot, api_name="bot_response"
         )
         txt_msg.then(lambda: gr.Textbox(interactive=True), None, [txt], queue=False)
-        
+        file_msg = btn.upload(add_multimedia, [chatbot, btn], [chatbot], queue=False) #.then(
+        # bot, chatbot, chatbot, api_name="bot_response"
+        # )
         with gr.Row():
             show_url_btn = gr.Button("Show URLs", scale=0)
             restart_btn = gr.Button("Restart Application", scale=0)
