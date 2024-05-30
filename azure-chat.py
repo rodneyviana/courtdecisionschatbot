@@ -17,6 +17,8 @@ print(f"temp dir: {directory}")
 
 getResponse: Callable[[str, any], str] = process_question
 
+config = get_config()
+
 lastText = ""
 lastMedia = None
 def set_get_response(get_response: Callable[[str], str]):
@@ -39,6 +41,12 @@ def get_file_extension(file_name):
 def add_file(history, file):
     history = history + [((file.name,), None)]
     return history
+
+def restart_chatbot(chatbot: gr.Chatbot):
+    print(chatbot)
+    chatbot = [(None, "New conversation started")]
+    start_vanilla_conversation()
+    return chatbot
 
 def add_multimedia(history, file):
     if not (conversation and len(conversation) > 0):
@@ -131,14 +139,17 @@ def show_urls():
     gr.Info(f"Share URL: {share_url}")
     # return f"Local URL: {local_url}\nShare URL: {share_url}"
 
+def full_path_of_local_file(file_name):
+    return os.path.join(os.path.dirname(__file__), file_name)
+
 # Create an instance of the edit_config function
 config_interface = edit_config(get_config())
 
 latex_delimiters=[ 
               {"left": "$$", "right": "$$", "display": False },
               {"left": '$', "right": '$', "display": False},
-              {"left": "\\[", "right": "\\]", "display": True},
-              {"left": "\\(", "right": "\\)", "display": True},
+              {"left": "\\[", "right": "\\]", "display": False},
+              {"left": "\\(", "right": "\\)", "display": False},
               ]
 
 css = """
@@ -169,13 +180,15 @@ with gr.Blocks(title="AI", theme=theme, css=css) as demo:
                      allow_flagging="never",
                      )
         chatbot = gr.Chatbot(
-            [],
+            [(None, config.welcome_message)],
             elem_id="chatbot",
             bubble_full_width=False,
             label="Chat with the AI",
-            avatar_images=(None, (os.path.join(os.path.dirname(__file__), "logoblue.png"))),
+            avatar_images=(full_path_of_local_file("userlogo.png"), full_path_of_local_file("botlogo.png")),
             elem_classes="chatbot-container",
             latex_delimiters=latex_delimiters,
+            show_copy_button=True,
+
             
         )
         
@@ -207,7 +220,9 @@ with gr.Blocks(title="AI", theme=theme, css=css) as demo:
         # )
         with gr.Row():
             show_url_btn = gr.Button("Show URLs", scale=0)
+            restart_chatbot_btn = gr.Button("Restart Conversation", scale=0)
             restart_btn = gr.Button("Restart Application", scale=0)
+            restart_chatbot_btn.click(restart_chatbot, chatbot, chatbot)
             restart_btn.click(restart_process)
             show_url_btn.click(show_urls)
     with gr.Tab("Edit Config"):
@@ -218,7 +233,7 @@ with gr.Blocks(title="AI", theme=theme, css=css) as demo:
 
 demo.queue()
 lastText = ""
-config = get_config()
+
 apiInfo, local_url, share_url = demo.launch(share=config.gradio_share, server_port=config.gradio_port, server_name=config.gradio_host, prevent_thread_lock=True)
 logger.info(f"Launched interface with info: {apiInfo}")
 try:
