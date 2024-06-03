@@ -159,52 +159,57 @@ def process_question(question: str, message_object = None):
         })
   else:
     conversation.append(message_object)
-  completion = openai.chat.completions.create(
-        model=config.open_ai_engine_id,
-        messages = conversation,
-        temperature=config.open_ai_temperature,
-        max_tokens=config.open_ai_max_tokens,
-        top_p=config.open_ai_top_p,
-        frequency_penalty=config.open_ai_frequency_penalty,
-        presence_penalty=config.open_ai_presence_penalty,
-        stream=(message_object is None),
-        stop=None
-      )
-  content = ""
-  role = "assistant"
-  if message_object:
-     #yield ""
-     content = completion.choices[0].message.content
-     yield content
-  else:
-    for chunk in completion:
-      if len(chunk.choices)  > 0:
-        try:
-          if(chunk.choices[0].delta is None or chunk.choices[0].delta.content is None):
-            print("No content")
-            logger.error("No content")
-            continue;
-          if(chunk.choices[0].finish_reason == "length" or chunk.choices[0].finish_reason == "content_filter"):
-            content = content + f" (error reason: {chunk.choices[0].finish_reason})"
-            print(f"stop reason: {chunk.choices[0].finish_reason}")
-            logger.error(f"stop reason: {chunk.choices[0].finish_reason}")
-            yield f" (error reason: {chunk.choices[0].finish_reason})"
-            break
-          content = content + chunk.choices[0].delta.content
-          # role = chunk.choices[0].delta.role;
-          yield chunk.choices[0].delta.content
-        except Exception as e:
-          logger.error(e)
-          print(e)
-  if(content is None or len(content) == 0):
-    content = "Sorry, I could not generate a response. Please try again."
-    logger.error("No content generated")
-  conversation.append({
-      "role": role,
-      "content": content
-    })
-  yield ""
-  
+  try:
+    completion = openai.chat.completions.create(
+          model=config.open_ai_engine_id,
+          messages = conversation,
+          temperature=config.open_ai_temperature,
+          max_tokens=config.open_ai_max_tokens,
+          top_p=config.open_ai_top_p,
+          frequency_penalty=config.open_ai_frequency_penalty,
+          presence_penalty=config.open_ai_presence_penalty,
+          stream=(message_object is None),
+          stop=None
+        )
+    content = ""
+    role = "assistant"
+    if message_object:
+      #yield ""
+      content = completion.choices[0].message.content
+      yield content
+    else:
+      for chunk in completion:
+        if len(chunk.choices)  > 0:
+          try:
+            if(chunk.choices[0].delta is None or chunk.choices[0].delta.content is None):
+              print("No content")
+              logger.error("No content")
+              continue;
+            if(chunk.choices[0].finish_reason == "length" or chunk.choices[0].finish_reason == "content_filter"):
+              content = content + f" (error reason: {chunk.choices[0].finish_reason})"
+              print(f"stop reason: {chunk.choices[0].finish_reason}")
+              logger.error(f"stop reason: {chunk.choices[0].finish_reason}")
+              yield f" (error reason: {chunk.choices[0].finish_reason})"
+              break
+            content = content + chunk.choices[0].delta.content
+            # role = chunk.choices[0].delta.role;
+            yield chunk.choices[0].delta.content
+          except Exception as e:
+            logger.error(e)
+            print(e)
+    if(content is None or len(content) == 0):
+      content = "Sorry, I could not generate a response. Please try again."
+      logger.error("No content generated")
+    conversation.append({
+        "role": role,
+        "content": content
+      })
+    yield ""
+  except Exception as e:
+    logger.error(e)
+    print(e)
+    yield f"Error processing question: '{e}'"
+
 # Create a gradio app to upload the file and process it
 app = gr.Interface(
   # Define the function to process the file

@@ -46,6 +46,7 @@ def restart_chatbot(chatbot: gr.Chatbot):
     print(chatbot)
     chatbot = [(None, "New conversation started")]
     start_vanilla_conversation()
+    gr.Warning("Chatbot restarted. Please refresh the page to start a new conversation.")
     return chatbot
 
 def add_multimedia(history, file):
