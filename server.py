@@ -3,6 +3,8 @@ import gradio as gr
 import pdfplumber
 import json
 import openai
+from openai.types.chat import ChatCompletionChunk
+from openai.types import CompletionUsage
 import dotenv
 import docx
 from document_ai import analyze_read
@@ -18,14 +20,6 @@ logger = get_logger(get_config())
 
 def set_get_response(s):
   pass
-#markdown_bot = None
-
-# Load the environment variables
-# dotenv.load_dotenv()
-# openai.api_type = os.getenv("OPENAI_API_TYPE")
-# openai.api_base = os.getenv("AZURE_OPENAI_BASE_URL")
-# openai.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
-# openai.api_key = os.getenv("OPENAI_API_KEY")
 
 config = get_config()
 openai.api_key = config.open_ai_api_key
@@ -40,8 +34,24 @@ else:
   openai.api_base = config.azure_open_ai_base_url
 
 
-
+last_chatcompletion: CompletionUsage = {
+  "completion_tokens": 0,
+  "prompt_tokens": 0,
+  "total_tokens": 0
+}
 conversation = []
+
+def reset_last_chatcompletion():
+   global last_chatcompletion
+   last_chatcompletion = {
+    "completion_tokens": 0,
+    "prompt_tokens": 0,
+    "total_tokens": 0
+   }
+
+
+
+get_last_chatcompletion = lambda: f"[Response Tokens: {last_chatcompletion.completion_tokens:>20,}], [Prompt Tokens: {last_chatcompletion.prompt_tokens:>20,}],  [Total Tokens: {last_chatcompletion.total_tokens:>20,}]"
 
 document_text = ""
 
@@ -148,7 +158,7 @@ def process_file(files):
 
 def process_question(question: str, message_object = None):
   global conversation
-  
+  global last_chatcompletion
   if(message_object is None):
     if(question is None or len(question) == 0):
       return "Please enter a question."
@@ -159,57 +169,59 @@ def process_question(question: str, message_object = None):
         })
   else:
     conversation.append(message_object)
-  try:
-    completion = openai.chat.completions.create(
-          model=config.open_ai_engine_id,
-          messages = conversation,
-          temperature=config.open_ai_temperature,
-          max_tokens=config.open_ai_max_tokens,
-          top_p=config.open_ai_top_p,
-          frequency_penalty=config.open_ai_frequency_penalty,
-          presence_penalty=config.open_ai_presence_penalty,
-          stream=(message_object is None),
-          stop=None
-        )
-    content = ""
-    role = "assistant"
-    if message_object:
-      #yield ""
-      content = completion.choices[0].message.content
-      yield content
-    else:
-      for chunk in completion:
-        if len(chunk.choices)  > 0:
-          try:
-            if(chunk.choices[0].delta is None or chunk.choices[0].delta.content is None):
-              print("No content")
-              logger.error("No content")
-              continue;
-            if(chunk.choices[0].finish_reason == "length" or chunk.choices[0].finish_reason == "content_filter"):
-              content = content + f" (error reason: {chunk.choices[0].finish_reason})"
-              print(f"stop reason: {chunk.choices[0].finish_reason}")
-              logger.error(f"stop reason: {chunk.choices[0].finish_reason}")
-              yield f" (error reason: {chunk.choices[0].finish_reason})"
-              break
-            content = content + chunk.choices[0].delta.content
-            # role = chunk.choices[0].delta.role;
-            yield chunk.choices[0].delta.content
-          except Exception as e:
-            logger.error(e)
-            print(e)
-    if(content is None or len(content) == 0):
-      content = "Sorry, I could not generate a response. Please try again."
-      logger.error("No content generated")
-    conversation.append({
-        "role": role,
-        "content": content
-      })
-    yield ""
-  except Exception as e:
-    logger.error(e)
-    print(e)
-    yield f"Error processing question: '{e}'"
-
+  completion: openai.Stream[ChatCompletionChunk] = openai.chat.completions.create(
+        model=config.open_ai_engine_id,
+        messages = conversation,
+        temperature=config.open_ai_temperature,
+        max_tokens=config.open_ai_max_tokens,
+        top_p=config.open_ai_top_p,
+        frequency_penalty=config.open_ai_frequency_penalty,
+        presence_penalty=config.open_ai_presence_penalty,
+        stream=(message_object is None),
+        stream_options=None if message_object else {
+            "include_usage": True
+        },           
+        stop=None
+      )
+  content = ""
+  role = "assistant"
+  if message_object:
+     #yield ""
+     content = completion.choices[0].message.content
+     yield content
+  else:
+    for chunk in completion:
+      if chunk.usage:
+        print(f"usage: {chunk.usage}")
+        logger.info(f"usage: {chunk.usage}")
+        last_chatcompletion = chunk.usage
+      if len(chunk.choices)  > 0:
+        try:
+          if(chunk.choices[0].delta is None or chunk.choices[0].delta.content is None):
+            print("No content")
+            logger.error("No content")
+            continue;
+          if(chunk.choices[0].finish_reason == "length" or chunk.choices[0].finish_reason == "content_filter"):
+            content = content + f" (error reason: {chunk.choices[0].finish_reason})"
+            print(f"stop reason: {chunk.choices[0].finish_reason}")
+            logger.error(f"stop reason: {chunk.choices[0].finish_reason}")
+            yield f" (error reason: {chunk.choices[0].finish_reason})"
+            break
+          content = content + chunk.choices[0].delta.content
+          # role = chunk.choices[0].delta.role;
+          yield chunk.choices[0].delta.content
+        except Exception as e:
+          logger.error(e)
+          print(e)
+  if(content is None or len(content) == 0):
+    content = "Sorry, I could not generate a response. Please try again."
+    logger.error("No content generated")
+  conversation.append({
+      "role": role,
+      "content": content
+    })
+  yield ""
+  
 # Create a gradio app to upload the file and process it
 app = gr.Interface(
   # Define the function to process the file

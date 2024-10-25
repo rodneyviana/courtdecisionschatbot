@@ -141,3 +141,4 @@ conversation*.txt
 latex_delimiters.json
 result.json
 creating_cohorts_of_songs.docx
+userconfig-openai.json

@@ -4,10 +4,11 @@ from typing import Callable
 import gradio as gr
 import os
 import time
-from server import process_question, process_file, conversation, start_vanilla_conversation
+from server import process_question, process_file, conversation, start_vanilla_conversation, get_last_chatcompletion
 from config import edit_config, get_config, logger, restart_process
 import pathlib
 import tempfile
+
 
 appInfo = None
 local_url = None
@@ -202,6 +203,8 @@ with gr.Blocks(title="AI", theme=theme, css=css) as demo:
                 container=False,
             )
             btn = gr.UploadButton("📁", file_types=["image", "video", "audio"])
+        with gr.Row(variant="panel"):
+            status_bar = gr.Textbox(label="Tokens usage", interactive=False, scale=1)
 
         with gr.Row(variant="panel"):
             gr_check_save_all = gr.Checkbox(label="Save all responses", value=False, scale=0)
@@ -211,11 +214,11 @@ with gr.Blocks(title="AI", theme=theme, css=css) as demo:
             gr_submit_button = gr.Button("Save last response to file", scale=0)
 
         gr_submit_button.click(get_last_response, gr_check_save_all, gr_outputs)
-
         txt_msg = txt.submit(add_text, [chatbot, txt], [chatbot, txt], queue=False).then(
             bot, chatbot, chatbot, api_name="bot_response"
         )
         txt_msg.then(lambda: gr.Textbox(interactive=True), None, [txt], queue=False)
+        txt_msg.then(lambda: get_last_chatcompletion(), None, [status_bar], queue=False)
         file_msg = btn.upload(add_multimedia, [chatbot, btn], [chatbot], queue=False) #.then(
         # bot, chatbot, chatbot, api_name="bot_response"
         # )
@@ -236,10 +239,9 @@ demo.queue()
 lastText = ""
 
 apiInfo, local_url, share_url = demo.launch(share=config.gradio_share, server_port=config.gradio_port, server_name=config.gradio_host, prevent_thread_lock=True)
-logger.info(f"Launched interface with info: {apiInfo}")
+logger.info(f"Launched interface with info: {apiInfo.__dict__}")
 try:
     while True:
         time.sleep(0.1)
 except KeyboardInterrupt:
     print("Shutting down the server...")
-
