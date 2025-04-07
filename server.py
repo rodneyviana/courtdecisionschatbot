@@ -51,7 +51,14 @@ def reset_last_chatcompletion():
 
 
 
-get_last_chatcompletion = lambda: f"[Response Tokens: {last_chatcompletion.completion_tokens:>20,}], [Prompt Tokens: {last_chatcompletion.prompt_tokens:>20,}],  [Total Tokens: {last_chatcompletion.total_tokens:>20,}]"
+
+def get_last_chatcompletion():
+   try:
+     return f"[Response Tokens: {last_chatcompletion.completion_tokens:>20,}], [Prompt Tokens: {last_chatcompletion.prompt_tokens:>20,}],  [Total Tokens: {last_chatcompletion.total_tokens:>20,}]"
+   except Exception as e:
+      logger.error(e)
+      print(e)
+      return f"Error getting tokens: {e}"
 
 document_text = ""
 
