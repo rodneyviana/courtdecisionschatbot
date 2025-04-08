@@ -117,11 +117,15 @@ def bot(history):
     if not (conversation and len(conversation) > 0):
         start_vanilla_conversation()
         # conversation.append({"role": "user", "content": lastText})
-    
-    response = getResponse(lastText)
-    history[-1][1] = ""
-    for chunk in response:
-        history[-1][1] += chunk
+    try:
+        response = getResponse(lastText)
+        history[-1][1] = ""
+        for chunk in response:
+            history[-1][1] += chunk
+            yield history
+    except Exception as e:
+        print(f"Error in bot function: {e}")
+        history[-1][1] = "An error occurred while processing the request: " + str(e)
         yield history
 
 last_size = 0
