@@ -228,20 +228,7 @@ def process_question(question: str, message_object = None):
       "content": content
     })
   yield ""
-  
-# Create a gradio app to upload the file and process it
-app = gr.Interface(
-  # Define the function to process the file
-  fn = process_file,
-  # Define the input and output components
-  inputs = gr.File(label="Upload a court decision pdf or json file"),
-  outputs = "text",
-  # Define the title and the description
-  title = "Court Decision Chat",
-  description = "This is a gradio app that allows you to upload a court decision pdf or json file and create an OpenAI chat based on it. You can ask questions about the court decision and get answers from OpenAI."
-)
-# Launch the app
-#app.launch()
+
 
 if __name__ == "__main__":
     print("Please run the azure-chat.py file instead of this file.")  

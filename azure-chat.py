@@ -8,6 +8,7 @@ from server import process_question, process_file, conversation, start_vanilla_c
 from config import edit_config, get_config, logger, restart_process
 import pathlib
 import tempfile
+from os.path import basename
 
 
 appInfo = None
@@ -47,16 +48,23 @@ def restart_chatbot(chatbot: gr.Chatbot):
     print(chatbot)
     chatbot = [(None, "New conversation started")]
     start_vanilla_conversation()
-    gr.Warning("Chatbot restarted. Please refresh the page to start a new conversation.")
+    gr.Info("Chatbot restarted.")
     return chatbot
 
 def add_multimedia(history, file):
+    global conversation
     if not (conversation and len(conversation) > 0):
         start_vanilla_conversation()
     global lastMedia
     file_type = "image"
+    content_type = "image_url"
+    input_type = "image_url"
+    data_type = "url"
     if file.name.endswith(".wav") or file.name.endswith(".wmv") or file.name.endswith(".mp3"):
         file_type = "audio"
+        content_type = "input_audio"
+        input_type = "input_audio"
+        data_type = "data"
     elif file.name.endswith(".mp4") or file.name.endswith(".mov") or file.name.endswith(".avi"):
         file_type = "video"
     base64_muiltimedia = encode_image(file.name)
@@ -66,9 +74,9 @@ def add_multimedia(history, file):
         "role": "user",
         "content": [
             {
-                "type": f"{file_type}_url",
-                 f"{file_type}_url": {
-                    "url": f"data:{file_type}/{file_ext};base64,{base64_muiltimedia}"
+                "type": content_type,
+                f"{input_type}": {
+                    f"{data_type}": (f"data:{file_type}/{file_ext};base64," if data_type=="url" else "" )+ f"{base64_muiltimedia}"
                 }
             },
             {
@@ -77,20 +85,34 @@ def add_multimedia(history, file):
             }
           ]
         }
-
-    history = history + [((file.name,), None)]
-    history = history + [[instr_media, ""]]    
-    response = getResponse(None, message)
-    
-    for chunk in response:
-        print(f"chunk: {chunk}")
-        history[-1][1] += chunk
+    if not file_type == "image":
+        message["content"][0][f"{input_type}"]["format"] = file_ext
+    filename_only = basename(file.name)
+    newhistory = history + [((file.name,), None)]
+    newhistory = newhistory + [[instr_media, ""]]
+    try:
+        response = getResponse(None, message)
+        for chunk in response:
+            print(f"chunk: {chunk}")
+            newhistory[-1][1] += chunk
+            yield newhistory
+    except Exception as e:
+        if "Invalid image data" in str(e):
+            print("Specific error caught: Invalid image data.")
+            error = f"⚠️ Error: {filename_only} is an invalid image or unsupported type. It will be ignored."
+        else:
+            print(f"Error: {e}")
+            error = f"⚠️ Error processing the file: {e.message or str(e)}"
+        # remove last message from conversation
+        conversation.pop()
+        history += [(None, error)]
         yield history
 
 
 
 
 def bot(history):
+    global conversation
     global lastText
     if not (conversation and len(conversation) > 0):
         start_vanilla_conversation()
@@ -104,6 +126,7 @@ def bot(history):
 
 last_size = 0
 def get_last_response(check_save_all: gr.Checkbox):
+    global conversation
     global last_size
     global directory
     if(not directory):
