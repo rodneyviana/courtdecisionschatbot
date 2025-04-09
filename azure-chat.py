@@ -262,33 +262,14 @@ with gr.Blocks(title="AI", theme=theme, css=css) as demo:
         # Create the interface with the added examples section at the end
         with gr.Blocks():
             with gr.Accordion("AI Personality Presets", open=False):
-                with gr.Group():
-                    gr.Markdown("### \"The Analyst\"")
-                    gr.Markdown("- **Temperature:** 0.2")
-                    gr.Markdown("- **Top-p:** 0.2")
-                    gr.Markdown("- **Presence Penalty:** 0")
-                    gr.Markdown("- **Frequency Penalty:** 0")
-                    gr.Markdown("- **Behavior:** Highly deterministic and fact-focused. Ensures concise, factual answers without creativity or redundancy.")
-                    gr.Markdown("- **Use Case:** Technical support, math, programming help.")
-                    gr.Markdown("- **Example:** \"What is 5+5?\" → \"The answer is 10.\"")
-                    
-                    gr.Markdown("### \"The Conversationalist\"")
-                    gr.Markdown("- **Temperature:** 0.5")
-                    gr.Markdown("- **Top-p:** 0.5")
-                    gr.Markdown("- **Presence Penalty:** 0.3")
-                    gr.Markdown("- **Frequency Penalty:** 0.3")
-                    gr.Markdown("- **Behavior:** Balanced and engaging. Avoids repeating itself while maintaining conversational flow.")
-                    gr.Markdown("- **Use Case:** General-purpose conversational chatbots.")
-                    gr.Markdown("- **Example:** \"Tell me about space.\" → \"Space is a vast expanse filled with stars, planets, and mysteries waiting to be uncovered.\"")
-                    
-                    gr.Markdown("### \"The Storyteller\"")
-                    gr.Markdown("- **Temperature:** 0.8")
-                    gr.Markdown("- **Top-p:** 0.8")
-                    gr.Markdown("- **Presence Penalty:** 0.4")
-                    gr.Markdown("- **Frequency Penalty:** 0.4")
-                    gr.Markdown("- **Behavior:** Creative and diverse. Avoids repeating ideas and encourages novelty in storytelling.")
-                    gr.Markdown("- **Use Case:** Storytelling, humor, or imaginative tasks.")
-                    gr.Markdown("- **Example:** \"Write a story about a robot.\" → \"Once upon a time, a lonely robot named Zeno roamed the galaxy, searching for a purpose among the stars.\"")
+                gr.Markdown(
+                    """| Profile                 | Temp | Top-p | Presence Penalty | Frequency Penalty | Behavior                                                                                       | Use Case                              | Example                                                                                               |
+|-------------------------|------|-------|-------------------|-------------------|------------------------------------------------------------------------------------------------|----------------------------------------|--------------------------------------------------------------------------------------------------------|
+| **The Analyst**         | 0.2  | 0.2   | 0                 | 0                 | Highly deterministic and fact-focused. Ensures concise, factual answers without creativity or redundancy. | Technical support, math, programming help. | "What is 5+5?" → "The answer is 10."                                                                  |
+| **The Conversationalist** | 0.5  | 0.5   | 0.3               | 0.3               | Balanced and engaging. Avoids repeating itself while maintaining conversational flow.                    | General-purpose conversational chatbots. | "Tell me about space." → "Space is a vast expanse filled with stars, planets, and mysteries waiting to be uncovered." |
+| **The Storyteller**     | 0.8  | 0.8   | 0.4               | 0.4               | Creative and diverse. Avoids repeating ideas and encourages novelty in storytelling.                    | Storytelling, humor, or imaginative tasks. | "Write a story about a robot." → "Once upon a time, a lonely robot named Zeno roamed the galaxy, searching for a purpose among the stars." |
+"""
+                )
         
     
 

@@ -143,7 +143,7 @@ def edit_config(config):
     #btn = gr.Button("Update Config (it will restart the process)", variant="primary", js="setTimeout(() =>  window.location.reload(),1000)")
     #btn.click(None, js="setTimeout(() =>  window.location.reload(),1000)")
     iface = gr.Interface(fn=update_config, inputs=list(fields.values()), outputs=None, allow_flagging="never",
-                          title="Config Editor", description="Edit the config file", 
+                          title="Config Editor", description="Edit the config file (see end of page for AI personality presets)", 
                           submit_btn="Update Config (it will restart the process)")
 
     
